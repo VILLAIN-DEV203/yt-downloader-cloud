@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Downloader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #cc0000;
+    }
+    label, select, input, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #cc0000;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #a00000;
+    }
+  </style>
+</head>
+<body>
+  <h1>YouTube Downloader</h1>
+  <label for="url">YouTube Video URL</label>
+  <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=..." />
+
+  <label for="quality">Select Quality</label>
+  <select id="quality">
+    <option value="4k">4K</option>
+    <option value="2k">2K</option>
+    <option value="1080p">1080p</option>
+    <option value="audio">Audio Only</option>
+  </select>
+
+  <button onclick="downloadVideo()">Download</button>
+
+  <p id="status"></p>
+
+  <script>
+    async function downloadVideo() {
+      const url = document.getElementById("url").value;
+      const quality = document.getElementById("quality").value;
+      const status = document.getElementById("status");
+
+      if (!url.trim()) {
+        status.textContent = "❌ Please enter a YouTube URL.";
+        return;
+      }
+
+      status.textContent = "⏳ Downloading... please wait.";
+
+      try {
+        const response = await fetch("https://yt-downloader-server-r4ra.onrender.com/download", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ url, quality })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to download");
+        }
+
+        const blob = await response.blob();
+        const filename = quality === "audio" ? "audio.mp3" : "video.mp4";
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+
+        status.textContent = "✅ Download complete!";
+      } catch (error) {
+        status.textContent = `❌ Error: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
